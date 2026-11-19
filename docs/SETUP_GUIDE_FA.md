@@ -2,6 +2,10 @@
 
 > 🇬🇧 **English Version:** [Complete A-to-Z Setup & GitHub Guide (English)](./SETUP_GUIDE_EN.md)
 
+> [!IMPORTANT]
+> **وضعیت پشتیبانی سیستم‌عامل‌ها:** این پروژه به‌طور کامل روی **ویندوز ۱۰ و ۱۱ (کامپیوتر میزبان) + اندروید (اپ بومی APK و مرورگر موبایل)** تست و تأیید شده است.
+> اسکریپت‌های لینوکس و مک (`.sh` مثل `start_ag_phone_connect.sh` و `start_ag_phone_connect_web.sh`) و مسیرهای یونیکس به‌صورت **آزمایشی و تست‌نشده (Experimental / Untested)** در مخزن قرار دارند و روی لینوکس، مک یا آیفون واقعی اجرا و آزمایش نشده‌اند.
+
 این راهنما به‌صورت قدم‌به‌قدم و از صفر تا صد، تمام مراحل نصب پیش‌نیازها، پیکربندی فایل `.env`، اتصال روی وای‌فای خانگی، اتصال از هر جای دنیا روی اینترنت همراه با تونل‌های امن، نصب یا کامپایل اپلیکیشن اندروید، اجرای تست‌های خودکار را آموزش می‌دهد.
 
 ---
@@ -44,63 +48,46 @@
 
 ### ۲. Node.js نسخه 18 LTS یا جدیدتر (به همراه `npm`)
 برای اجرای `server.js` و اسکریپت تست `tests/verify_remote_control.mjs` ضروری است.
-- **ویندوز (PowerShell):**
+- **ویندوز (تأییدشده — PowerShell):**
   ```powershell
   winget install OpenJS.NodeJS.LTS
   ```
   *(یا فایل نصاب LTS را از سایت رسمی [nodejs.org](https://nodejs.org/) دانلود و نصب کنید.)*
-- **مک (Homebrew):**
-  ```bash
-  brew install node@20
-  ```
-- **لینوکس (Ubuntu / Debian):**
-  ```bash
-  curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-  sudo apt-get install -y nodejs
-  ```
+- **لینوکس / مک *(آزمایشی / تست‌نشده)*:** نصب Node.js 18+ با مدیر بسته سیستم (`brew install node@20` یا NodeSource `apt`). روی لینوکس و مک آزمایش نشده است.
 - **تأیید نصب:**
-  ```bash
+  ```bat
   node --version
   npm --version
   ```
 
 ### ۳. Python نسخه 3.9 یا جدیدتر (با `venv` و `pip`)
 برای اجرای لانچر (`launcher.py`)، ساخت کد QR در ترمینال، نصب خودکار کتابخانه‌های تونل و بررسی سلامت اتصال لازم است.
-- **ویندوز:**
+- **ویندوز (تأییدشده):**
   ```powershell
   winget install Python.Python.3.12
   ```
   *(اگر از [python.org](https://www.python.org/downloads/) نصب می‌کنید، حتماً تیک **"Add python.exe to PATH"** را بزنید.)*
-- **مک:**
-  ```bash
-  brew install python
-  ```
-- **لینوکس (Ubuntu / Debian):**
-  ```bash
-  sudo apt-get update && sudo apt-get install -y python3 python3-venv python3-pip
-  ```
+- **لینوکس / مک *(آزمایشی / تست‌نشده)*:** بسته‌های `python3`، `python3-venv` و `python3-pip` مورد نیاز است (روی لینوکس/مک تست نشده است).
 - **تأیید نصب:**
-  ```bash
-  python --version   # در مک و لینوکس از python3 --version استفاده کنید
+  ```bat
+  python --version
   ```
 
 ### ۴. Git
-- **ویندوز:** `winget install Git.Git`
-- **مک:** `xcode-select --install` (یا `brew install git`)
-- **لینوکس:** `sudo apt-get install -y git`
+- **ویندوز (تأییدشده):** `winget install Git.Git`
+- **لینوکس / مک *(آزمایشی / تست‌نشده)*:** نصب `git` با Homebrew یا `apt`.
 
 ### ۵. ابزارهای اختیاری برای تونل اینترنت (دسترسی خارج از خانه)
 اسکریپت `launcher.py` به‌صورت خودکار محیط مجازی `venv/` ساخته و پکیج‌های `requirements.txt` (`pyngrok`، `python-dotenv`، `qrcode` و `pinggy`) را نصب می‌کند؛ بنابراین **Pinggy** بدون نصب هیچ ابزار اضافی آماده کار است.
 - **Cloudflare (`cloudflared`):**
-  - **ویندوز:** `winget install Cloudflare.cloudflared` (یا فایل `cloudflared.exe` را کنار فایل‌های پروژه قرار دهید)
-  - **مک:** `brew install cloudflared`
-  - **لینوکس:** بسته مناسب توزیع خود را از صفحه دانلود کلودفلر نصب کنید تا دستور `cloudflared` در `PATH` باشد.
-- **Serveo (`ssh`):** از کلاینت داخلی OpenSSH ویندوز ۱۰/۱۱، مک یا لینوکس استفاده می‌کند.
+  - **ویندوز (تأییدشده):** `winget install Cloudflare.cloudflared` (یا فایل `cloudflared.exe` را کنار فایل‌های پروژه قرار دهید)
+  - **لینوکس / مک *(آزمایشی / تست‌نشده)*:** قرار دادن باینری `cloudflared` در `PATH` (روی لینوکس/مک تست نشده است).
+- **Serveo (`ssh`):** از کلاینت داخلی OpenSSH ویندوز ۱۰/۱۱ استفاده می‌کند.
 - **ngrok:** برای استفاده از `ngrok` یک توکن رایگان از [dashboard.ngrok.com](https://dashboard.ngrok.com) بگیرید.
 
 ### ۶. ابزار ساخت APK اندروید *(فقط در صورت نیاز به کامپایل سورس اندروید)*
 اگر فقط می‌خواهید از اپ استفاده کنید، نیازی به این بخش ندارید و می‌توانید فایل آماده `Antigravity-Remote-Control-v6.0.apk` را از بخش **Releases** گیت‌هاب نصب کنید. برای کامپایل سورس (`android/`):
-- **JDK 17** (`winget install EclipseAdoptium.Temurin.17.JDK` در ویندوز)
+- **JDK 17** (`winget install EclipseAdoptium.Temurin.17.JDK` در ویندوز؛ *در مک و لینوکس تست‌نشده*)
 - **Android Studio** یا ابزار خط فرمان **Android SDK** با پلتفرم SDK 36 (`compileSdk = 36`)، Build-Tools و `adb`.
 
 ---
@@ -119,27 +106,22 @@ npm install
 ```
 *(یا برای نصب دقیق طبق قفل نسخه‌ها: `npm ci`)*
 
-برای پایتون (لانچرهای `.bat` / `.sh` این مرحله را خودکار انجام می‌دهند، اما به‌صورت دستی هم می‌توانید انجام دهید):
-```bash
-# ویندوز (PowerShell)
+برای پایتون (لانچرهای `.bat` ویندوز این مرحله را خودکار انجام می‌دهند، اما به‌صورت دستی هم می‌توانید انجام دهید):
+```powershell
+# ویندوز (PowerShell — تأییدشده)
 python -m venv venv
 .\venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-
-# مک و لینوکس
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
 ```
+*(آزمایشی / تست‌نشده در لینوکس و مک: `python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt`.)*
 
 ### ۳. ساخت و ویرایش فایل `.env`
 فایل نمونه `.env.example` را با نام `.env` کپی کنید:
-```bash
-# در CMD ویندوز
+```bat
+:: در CMD ویندوز
 copy .env.example .env
 
-# در PowerShell / مک / لینوکس
-cp .env.example .env
+:: یا در PowerShell: cp .env.example .env
 ```
 
 حالا فایل `.env` را باز کرده و متغیرهای زیر را مطابق نیاز خود تنظیم کنید:
@@ -181,19 +163,11 @@ node generate_ssl.js
   ```powershell
   New-NetFirewallRule -DisplayName "Antigravity Remote Control (Port 3000)" -Direction Inbound -Protocol TCP -LocalPort 3000 -Profile Private -Action Allow
   ```
-- **لینوکس (`ufw`):** `sudo ufw allow 3000/tcp`
+- **لینوکس *(آزمایشی / تست‌نشده)*:** `sudo ufw allow 3000/tcp`
 
 ### گام ۳: اجرای سرور در حالت محلی
-- **ویندوز:** روی فایل `start_ag_phone_connect.bat` (یا `shortcuts\Phone Connect (Home).bat`) دابل‌کلیک کنید.
-- **مک / لینوکس:**
-  ```bash
-  chmod +x start_ag_phone_connect.sh   # فقط بار اول
-  ./start_ag_phone_connect.sh
-  ```
-- **اجرای مستقیم با Node.js:**
-  ```bash
-  npm start
-  ```
+- **ویندوز (تأییدشده):** روی فایل `start_ag_phone_connect.bat` (یا `shortcuts\Phone Connect (Home).bat`) دابل‌کلیک کنید، یا دستور `npm start` را مستقیماً در PowerShell/CMD اجرا کنید.
+- **لینوکس / مک *(آزمایشی / تست‌نشده)*:** فایل `start_ag_phone_connect.sh` در مخزن موجود است اما روی لینوکس یا مک تست نشده است.
 
 ### گام ۴: اتصال از روی گوشی
 - **با اپلیکیشن اندروید (پیشنهادی):**
@@ -223,12 +197,8 @@ node generate_ssl.js
   - `serveo` با SSH روی پورت `443` کار می‌کند و `ngrok` نیازمند `NGROK_AUTHTOKEN` در `.env` است.
 
 ### ۲. راه‌اندازی حالت Web Mode
-- **ویندوز:** روی `start_ag_phone_connect_web.bat` (یا `shortcuts\Phone Connect (Outside).bat`) دابل‌کلیک کنید.
-- **مک / لینوکس:**
-  ```bash
-  chmod +x start_ag_phone_connect_web.sh   # فقط بار اول
-  ./start_ag_phone_connect_web.sh
-  ```
+- **ویندوز (تأییدشده):** روی `start_ag_phone_connect_web.bat` (یا `shortcuts\Phone Connect (Outside).bat`) دابل‌کلیک کنید.
+- **لینوکس / مک *(آزمایشی / تست‌نشده)*:** فایل `start_ag_phone_connect_web.sh` در مخزن موجود است اما روی لینوکس یا مک تست نشده است.
 
 ### ۳. ورود و احراز هویت روی گوشی
 در ترمینال این موارد نمایش داده می‌شود:
@@ -252,26 +222,22 @@ node generate_ssl.js
 1. مطمئن شوید **JDK 17** (`JAVA_HOME`) و **Android SDK** نصب هستند.
 2. در پوشه `android/` یک فایل به نام `local.properties` *(نادیده‌گرفته‌شده در گیت)* بسازید و مسیر SDK را در آن بنویسید:
    ```properties
-   # نمونه ویندوز (بک‌اسلش و دونقطه باید با \ فرار داده شوند):
+   # نمونه ویندوز (تأییدشده — بک‌اسلش و دونقطه باید با \ فرار داده شوند):
    sdk.dir=C\:\\Users\\<YourName>\\AppData\\Local\\Android\\Sdk
 
-   # نمونه مک:
+   # نمونه‌های آزمایشی / تست‌نشده مک و لینوکس:
    # sdk.dir=/Users/<YourName>/Library/Android/sdk
-
-   # نمونه لینوکس:
    # sdk.dir=/home/<YourName>/Android/Sdk
    ```
 3. *(نکته مهم)* اگر فایلی در پوشه `public/` تغییر دادید، آن را دقیقاً به `android/app/src/main/assets/www/` کپی کنید تا بایت‌به‌بایت همگام بمانند.
 4. اجرای تست واحد اندروید و ساخت نسخه Release:
-   ```bash
+   ```bat
    cd android
 
-   # ویندوز
+   :: ویندوز (تأییدشده)
    .\gradlew.bat testDebugUnitTest assembleRelease
-
-   # مک و لینوکس
-   ./gradlew testDebugUnitTest assembleRelease
    ```
+   *(آزمایشی / تست‌نشده در لینوکس و مک: `./gradlew testDebugUnitTest assembleRelease`.)*
 5. فایل خروجی در مسیر زیر ساخته می‌شود:
    `android/app/build/outputs/apk/release/app-release.apk`
 6. نصب مستقیم با کابل USB و ADB (اختیاری):
@@ -289,26 +255,30 @@ node generate_ssl.js
 
 ---
 
-## چ) تست و اطمینان از سلامت پروژه
+## چ) تست و اطمینان از سلامت پروژه (تأییدشده روی ویندوز)
 
 پیش از انتشار یا پس از هر تغییر، تست‌های زیر را اجرا کنید:
 
-```bash
-# بررسی خطاهای نحوی (Syntax)
+```bat
+:: بررسی خطاهای نحوی (Syntax)
 node --check server.js
 node --check hub_bridge.js
 node --check public/js/app.js
 python -m py_compile launcher.py
 
-# اجرای مجموعه تست کامل سرور، باینری‌ها، امنیت تونل و Chrome Headless
+:: در صورت نبود پوشه certs، یک بار گواهی موقت بسازید (مرحله ۳ تست نیازمند HTTPS است)
+node generate_ssl.js
+
+:: اجرای مجموعه تست کامل سرور، باینری‌ها، امنیت تونل و Chrome Headless
 npm test
 ```
 
-تست‌های واحد اندروید:
-```bash
+تست‌های واحد اندروید (تأییدشده روی ویندوز):
+```bat
 cd android
-.\gradlew.bat testDebugUnitTest   # در مک/لینوکس: ./gradlew testDebugUnitTest
+.\gradlew.bat testDebugUnitTest
 ```
+*(آزمایشی / تست‌نشده در لینوکس و مک: `./gradlew testDebugUnitTest`.)*
 
 بررسی وضعیت سلامت سرور هنگام اجرا:
 ```bash
