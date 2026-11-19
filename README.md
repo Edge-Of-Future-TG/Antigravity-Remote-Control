@@ -39,7 +39,7 @@
 | Component | Status | Notes |
 | :--- | :--- | :--- |
 | **Host PC — Windows 10 / 11** | ✅ **Verified & Supported** | Tested end-to-end with live Antigravity 2.33+ Hub ConnectRPC, Local Wi-Fi QR, Web Tunnels (`cloudflare` / `pinggy`), and `npm test`. |
-| **Host PC — Linux (Ubuntu / Debian)** | ✅ **Linux CI Verified** | `.sh` launchers (`bash -n`), `server.js` HTTP/HTTPS/WS, `generate_ssl.js`, Hub ConnectRPC bridge, `launcher.py` LAN/IP logic, and `./gradlew testDebugUnitTest` verified on `ubuntu-latest` via [`npm run test:linux`](./tests/verify_linux.mjs) & [GitHub Actions](./.github/workflows/linux-ci.yml). *(Live GUI Antigravity Desktop on a physical Linux desktop has not been run locally yet.)* |
+| **Host PC — Linux (Ubuntu / Debian)** | 🧪 **Experimental / Untested** | Not tested on a real Linux desktop/environment yet. Linux fixes, `.sh` launchers, [GitHub Actions Linux CI](./.github/workflows/linux-ci.yml), and mock-Hub checks ([`npm run test:linux`](./tests/verify_linux.mjs)) are included; contributions/feedback welcome. |
 | **Mobile Client — Android** | ✅ **Verified & Supported** | Tested on physical Android hardware (`Antigravity-Remote-Control-v6.0.apk` + mobile Chrome). |
 | **Host PC — macOS & Mobile iOS** | 🧪 **Experimental / Untested** | Standard web UI & macOS code paths exist for contributors, but have not been tested on physical Apple hardware. |
 
