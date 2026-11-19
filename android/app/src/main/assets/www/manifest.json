@@ -1,0 +1,10 @@
+{
+  "name": "Antigravity Remote Control",
+  "short_name": "Antigravity",
+  "description": "Mobile Remote Control for Antigravity 2.33 Agentic Hub",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#101010",
+  "theme_color": "#101010",
+  "orientation": "portrait-primary"
+}

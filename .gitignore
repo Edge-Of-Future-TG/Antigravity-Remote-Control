@@ -1,0 +1,60 @@
+# Dependencies
+node_modules/
+
+# Logs
+*.log
+server_log.txt
+tunnel_log.txt
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Build / Temp / Tools
+dist/
+build/
+scratch/
+registry/
+cloudflared
+cloudflared.exe
+
+# SSL Certificates (generated locally)
+certs/
+
+# User Uploads (keep placeholder)
+uploads/*
+!uploads/.gitkeep
+
+# Python Virtual Environment & Bytecode
+venv/
+.venv/
+env/
+__pycache__/
+*.pyc
+pyvenv.cfg
+
+# Android Build Outputs & Local SDK Paths
+android/local.properties
+android/.gradle/
+android/.kotlin/
+android/build/
+android/app/build/
+*.apk
+*.jks
+*.keystore

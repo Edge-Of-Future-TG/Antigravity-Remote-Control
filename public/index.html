@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
+    <meta name="theme-color" content="#101010" id="metaThemeColor">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Antigravity Remote</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css?v=6.6.3">
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' data: blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self'; connect-src 'self' ws: wss: http: https:;">
+</head>
+
+<body data-agy-theme="developer" class="theme-dark">
+    <!-- Top Antigravity 2.33 Hub Header -->
+    <header class="header">
+        <div class="header-left">
+            <button class="agy-icon-btn" id="historyBtn" aria-label="Open Hub Sidebar" title="Conversations & Hub">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="3"></rect>
+                    <line x1="9" y1="3" x2="9" y2="21"></line>
+                </svg>
+                <span class="sidebar-running-dot" id="sidebarRunningDot" style="display: none;"></span>
+            </button>
+
+            <div class="brand" id="brandBtn" role="button" tabindex="0" title="Antigravity Hub · Scroll to Top" aria-label="Antigravity Hub">
+                <div class="brand-glyph" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2L3 7l9 5 9-5-9-5z"></path>
+                        <path d="M3 12l9 5 9-5"></path>
+                        <path d="M3 17l9 5 9-5"></path>
+                    </svg>
+                </div>
+                <div class="brand-meta">
+                    <div class="brand-title-row">
+                        <h1 id="headerTitle">Antigravity</h1>
+                        <div class="status-badge" id="statusBadge">
+                            <span class="status-dot disconnected" id="statusDot"></span>
+                            <span id="statusText">Connecting</span>
+                        </div>
+                    </div>
+                    <span class="brand-subtitle" id="statsText">Syncing Hub…</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="header-controls">
+            <button class="agy-pill-btn agy-pill-primary" id="newChatBtn" data-testid="new-conversation-button" aria-label="New Conversation" title="New Conversation">
+                <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2.3" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span class="btn-label">New</span>
+            </button>
+            <button class="agy-icon-btn action-danger" id="stopBtn" aria-label="Stop Agent" style="display: none;" title="Stop Agent Execution">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor">
+                    <rect x="5" y="5" width="14" height="14" rx="2.5" />
+                </svg>
+            </button>
+            <button class="agy-icon-btn" id="themeToggleBtn" aria-label="Toggle Theme" title="Switch Dark / Light Theme">
+                <svg id="themeIcon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="4"></circle>
+                    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+                </svg>
+            </button>
+            <button class="agy-icon-btn" id="refreshBtn" aria-label="Refresh" title="Refresh Session">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 2v6h-6"></path>
+                    <path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
+                    <path d="M3 22v-6h6"></path>
+                    <path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Surface Switcher (Normal Antigravity · Swarm UI · Antigravity IDE) + Live Weekly Quota Indicator -->
+    <nav class="surface-mode-bar" id="surfaceModeBar" aria-label="Antigravity Surface &amp; Quota">
+        <div class="surface-segmented" data-testid="surface-mode-switcher" role="tablist">
+            <button type="button"
+                    class="surface-seg-btn active"
+                    id="switchNormalBtn"
+                    data-surface-tab="antigravity"
+                    data-testid="switch-normal-antigravity-btn"
+                    role="tab"
+                    aria-selected="true">
+                <span class="seg-glyph">✦</span>
+                <span>Antigravity</span>
+            </button>
+            <button type="button"
+                    class="surface-seg-btn"
+                    id="switchSwarmBtn"
+                    data-surface-tab="swarm"
+                    data-testid="switch-swarm-ui-btn"
+                    role="tab"
+                    aria-selected="false">
+                <span class="seg-swarm-glyph">🐝</span>
+                <span>Swarm</span>
+                <span class="surface-seg-badge swarm-seg-badge" id="swarmNavBadge" style="display: none;">0</span>
+            </button>
+            <button type="button"
+                    class="surface-seg-btn"
+                    id="switchIdeBtn"
+                    data-surface-tab="ide"
+                    data-testid="switch-antigravity-ide-btn"
+                    role="tab"
+                    aria-selected="false"
+                    aria-label="Antigravity IDE">
+                <span class="seg-code-glyph">&lt;/&gt;</span>
+                <span><span class="seg-ide-prefix">Antigravity </span>IDE</span>
+                <span class="surface-seg-badge" id="ideChangedBadge" style="display: none;">0</span>
+            </button>
+        </div>
+
+        <div class="surface-bar-right">
+            <button type="button"
+                    class="surface-mini-btn"
+                    id="chatFindToggleBtn"
+                    data-testid="chat-find-toggle-btn"
+                    aria-label="Find in conversation"
+                    title="Find in conversation (/find)">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="7"></circle>
+                    <line x1="20" y1="20" x2="16.2" y2="16.2"></line>
+                </svg>
+            </button>
+
+            <button type="button"
+                    class="quota-ring-pill"
+                    id="quotaPillBtn"
+                    data-testid="quota-indicator-btn"
+                    aria-label="View Weekly Quota and Context Window"
+                    title="Weekly Model Quota &amp; Context Window (/quota)">
+                <svg class="quota-ring-svg" viewBox="0 0 20 20" width="14" height="14" aria-hidden="true">
+                    <circle class="quota-ring-track" cx="10" cy="10" r="7.5" fill="none" stroke-width="2.4"></circle>
+                    <circle class="quota-ring-fill" id="quotaRingCircle" cx="10" cy="10" r="7.5" fill="none" stroke-width="2.4" stroke-dasharray="47.12" stroke-dashoffset="0"></circle>
+                </svg>
+                <span id="quotaPillText">Quota</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- In-Conversation Search / Filter Bar -->
+    <div class="chat-find-bar" id="chatFindBar" data-testid="chat-find-bar" style="display: none;">
+        <input type="text" id="chatFindInput" placeholder="Find in conversation…" aria-label="Find in conversation" />
+        <span class="chat-find-count" id="chatFindCount">0/0</span>
+        <button type="button" class="chat-find-nav" id="chatFindPrevBtn" aria-label="Previous match">↑</button>
+        <button type="button" class="chat-find-nav" id="chatFindNextBtn" aria-label="Next match">↓</button>
+        <button type="button" class="chat-find-nav" id="chatFindCloseBtn" aria-label="Close search">✕</button>
+    </div>
+
+    <!-- Offline Preview Banner (Android Asset Preview Mode) -->
+    <div class="ssl-banner offline-preview-banner" id="offlinePreviewBanner" style="display: none;">
+        <span>✦ Offline UI Preview · Connect to your PC Hub for live sessions</span>
+        <div class="ssl-banner-actions">
+            <button id="connectPcFromOfflineBtn" type="button">Connect PC</button>
+        </div>
+    </div>
+
+    <!-- SSL / Connection Notice Banner -->
+    <div class="ssl-banner" id="sslBanner" style="display: none;">
+        <span>HTTP Local Session · Enable HTTPS for remote mic access</span>
+        <div class="ssl-banner-actions">
+            <button id="enableHttpsBtn" type="button">Enable HTTPS</button>
+            <button class="dismiss-btn" type="button" aria-label="Dismiss banner">✕</button>
+        </div>
+    </div>
+
+    <!-- Main Conversation Stream -->
+    <main class="chat-container" id="chatContainer">
+        <!-- Drag & Drop Overlay -->
+        <div class="drag-overlay" id="dragOverlay">
+            <div class="drag-overlay-content">
+                <div class="drag-icon-wrapper">
+                    <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                </div>
+                <h3>Attach to Antigravity</h3>
+                <p>Drop images or files into your active prompt</p>
+            </div>
+        </div>
+
+        <div class="chat-content" id="chatContent">
+            <div class="loading-state">
+                <div class="loading-spinner"></div>
+                <p>Connecting to Antigravity 2.33 Hub…</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Dedicated Antigravity IDE Workspace Section (Explorer, Code Viewer/Editor, Git Diffs & Desktop IDE Bridge) -->
+    <section class="ide-workspace-shell" id="ideContainer" data-testid="ide-workspace-section" style="display: none;">
+        <div class="ide-top-card">
+            <div class="ide-target-row">
+                <div class="ide-target-info">
+                    <span class="ide-target-title">Active Desktop Target</span>
+                    <span class="ide-target-sub" id="ideTargetStatusSub">Hub + Antigravity IDE Bridge</span>
+                </div>
+                <div class="ide-target-actions">
+                    <div class="ide-backend-switch" data-testid="ide-backend-target-toggle">
+                        <button type="button" class="ide-backend-btn active" id="ideTargetHubBtn" data-backend-target="antigravity">Hub</button>
+                        <button type="button" class="ide-backend-btn" id="ideTargetIdeBtn" data-backend-target="ide">IDE</button>
+                    </div>
+                    <button type="button" class="ide-launch-desktop-btn" id="openDesktopIdeBtn" data-testid="open-desktop-ide-btn" title="Launch or focus Antigravity IDE on PC">
+                        <span>↗ Open on PC</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="ide-workspace-row">
+                <label class="ide-ws-label" for="ideWorkspaceSelect">Workspace</label>
+                <select id="ideWorkspaceSelect" class="ide-workspace-select" data-testid="ide-workspace-select" aria-label="Select Workspace"></select>
+                <button type="button" class="ide-ws-refresh-btn" id="ideRefreshBtn" title="Refresh IDE workspace">↻</button>
+            </div>
+
+            <div class="ide-subtabs" role="tablist" aria-label="IDE Views">
+                <button type="button" class="ide-subtab active" data-ide-tab="explorer" data-testid="ide-tab-explorer">📁 Explorer</button>
+                <button type="button" class="ide-subtab" data-ide-tab="code" data-testid="ide-tab-code">📄 Code</button>
+                <button type="button" class="ide-subtab" data-ide-tab="git" data-testid="ide-tab-git">🔀 Git <span class="ide-tab-count" id="ideGitCountPill" style="display:none;">0</span></button>
+                <button type="button" class="ide-subtab" data-ide-tab="changed" data-testid="ide-tab-changed">⚡ Session</button>
+            </div>
+        </div>
+
+        <div class="ide-body-scroll" id="ideBodyScroll"></div>
+    </section>
+
+    <!-- Dedicated Antigravity 2.33 Swarm UI Section (Overview w/ Pixel Bees, Shared Board, Members, @Mention Graph & Raw) -->
+    <section class="swarm-ui-shell" id="swarmContainer" data-testid="swarm-ui-section" style="display: none;">
+        <div class="swarm-top-card">
+            <div class="swarm-header-row">
+                <div class="swarm-title-wrap">
+                    <h2 class="swarm-title-text" id="swarmTitleText" data-testid="swarm-title">Swarm Board</h2>
+                    <span class="swarm-live-pill" id="swarmLivePill" data-testid="swarm-live">
+                        <span class="swarm-live-dot" id="swarmLiveDot"></span>
+                        <span id="swarmLiveLabel">Live</span>
+                    </span>
+                </div>
+                <div class="swarm-header-actions">
+                    <button type="button" class="ide-launch-desktop-btn" id="swarmOpenCoordBtn" data-testid="swarm-open-coordinator-btn" title="Jump to Coordinator Conversation">
+                        <span>↗ Coordinator</span>
+                    </button>
+                    <button type="button" class="ide-ws-refresh-btn" id="swarmRefreshBtn" title="Refresh Swarm Board">↻</button>
+                </div>
+            </div>
+
+            <div class="swarm-meta-line" id="swarmMetaLine" data-testid="swarm-meta">Watching active conversation for a swarm…</div>
+
+            <div class="ide-workspace-row swarm-selector-row">
+                <label class="ide-ws-label" for="swarmSelectorSelect">Swarm</label>
+                <select id="swarmSelectorSelect" class="ide-workspace-select" data-testid="swarm-selector-select" aria-label="Select Swarm"></select>
+            </div>
+
+            <div class="ide-subtabs swarm-subtabs" role="tablist" aria-label="Swarm Views" data-testid="swarm-tabs">
+                <button type="button" class="ide-subtab swarm-subtab active" data-swarm-tab="overview" data-testid="swarm-tab-overview">
+                    🐝 Overview <span class="ide-tab-count swarm-alert-count" id="swarmOverviewAlertPill" style="display:none;">0</span>
+                </button>
+                <button type="button" class="ide-subtab swarm-subtab" data-swarm-tab="feed" data-testid="swarm-tab-feed">
+                    📋 Board <span class="ide-tab-count" id="swarmBoardCountPill" style="display:none;">0</span>
+                </button>
+                <button type="button" class="ide-subtab swarm-subtab" data-swarm-tab="members" data-testid="swarm-tab-members">
+                    👥 Members <span class="ide-tab-count" id="swarmMembersCountPill" style="display:none;">0</span>
+                </button>
+                <button type="button" class="ide-subtab swarm-subtab" data-swarm-tab="graph" data-testid="swarm-tab-graph">
+                    🕸️ Graph
+                </button>
+                <button type="button" class="ide-subtab swarm-subtab" data-swarm-tab="raw" data-testid="swarm-tab-raw">
+                    {} Raw
+                </button>
+            </div>
+        </div>
+
+        <div class="swarm-body-scroll" id="swarmBodyScroll" data-testid="swarm-body-scroll"></div>
+
+        <div class="swarm-coord-dock" id="swarmCoordDock" data-testid="swarm-coordinator-dock" style="display: none;">
+            <input type="text"
+                   id="swarmCoordInput"
+                   class="swarm-coord-input"
+                   data-testid="swarm-coord-input"
+                   placeholder="Message @coordinator (brief worker, switch model, feedback)…"
+                   aria-label="Send instruction to Swarm Coordinator" />
+            <button type="button" class="swarm-coord-send-btn" id="swarmCoordSendBtn" data-testid="swarm-coord-send-btn">
+                Send
+            </button>
+        </div>
+    </section>
+
+    <!-- Scroll to Bottom Floating Pill -->
+    <button class="fab" id="scrollToBottom" aria-label="Scroll to bottom">
+        <svg viewBox="0 0 24 24" fill="none" width="18" height="18">
+            <path d="M12 5v14M19 12l-7 7-7-7" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+    </button>
+
+    <!-- Floating Text Selection Quote Pill -->
+    <div class="selection-quote-pill" id="selectionQuotePill" style="display: none;" role="toolbar" aria-label="Quote selection">
+        <button type="button" class="selection-quote-action" id="selectionQuoteBtn" data-testid="selection-quote-button">
+            <span class="quote-glyph">❝</span>
+            <span>Quote &amp; Answer</span>
+        </button>
+        <button type="button" class="selection-btw-action" id="selectionBtwBtn" data-testid="selection-btw-button" title="Ask a non-interrupting /btw side question">
+            <span>💬 /btw</span>
+        </button>
+        <button type="button" class="selection-quote-dismiss" id="selectionDismissBtn" aria-label="Dismiss selection">✕</button>
+    </div>
+
+    <!-- Antigravity 2.33 Slash Commands & Quick Prompt Strip -->
+    <div class="quick-actions" role="region" aria-label="Slash Commands & Quick Actions">
+        <button class="action-chip slash-catalog-chip" id="allSlashChip" data-open-slash-sheet="1" data-testid="open-slash-catalog-chip" type="button" aria-label="Browse All Slash Actions">
+            <span class="slash-prefix">/</span><span>Actions</span>
+            <span class="slash-count-pill" id="slashCountPill">All</span>
+        </button>
+        <button class="action-chip slash-chip" data-action="/boost" type="button" aria-label="Boost Delegation">
+            <span class="slash-prefix">/</span><span>boost</span>
+        </button>
+        <button class="action-chip slash-chip" data-action="/swarm" type="button" aria-label="Swarm Multi-Agent">
+            <span class="slash-prefix">/</span><span>swarm</span>
+        </button>
+        <button class="action-chip slash-chip" data-action="/btw" type="button" aria-label="Side Question">
+            <span class="slash-prefix">/</span><span>btw</span>
+        </button>
+        <button class="action-chip slash-chip" data-action="/plan" type="button" aria-label="Implementation Plan">
+            <span class="slash-prefix">/</span><span>plan</span>
+        </button>
+        <button class="action-chip slash-chip" data-action="/goal" type="button" aria-label="Autonomous Goal">
+            <span class="slash-prefix">/</span><span>goal</span>
+        </button>
+        <button class="action-chip slash-chip" data-action="/compact" type="button" aria-label="Compact Context">
+            <span class="slash-prefix">/</span><span>compact</span>
+        </button>
+        <button class="action-chip slash-chip" data-action="/teamwork" type="button" aria-label="Teamwork Agents">
+            <span class="slash-prefix">/</span><span>teamwork</span>
+        </button>
+        <button class="action-chip slash-chip" data-action="/grill-me" type="button" aria-label="Grill Me Interview">
+            <span class="slash-prefix">/</span><span>grill-me</span>
+        </button>
+        <button class="action-chip slash-chip" data-action="/browser" type="button" aria-label="Browser Subagent">
+            <span class="slash-prefix">/</span><span>browser</span>
+        </button>
+        <button class="action-chip slash-chip" data-action="/learn" type="button" aria-label="Learn Patterns">
+            <span class="slash-prefix">/</span><span>learn</span>
+        </button>
+        <button class="action-chip slash-chip" data-action="/schedule" type="button" aria-label="Schedule Task">
+            <span class="slash-prefix">/</span><span>schedule</span>
+        </button>
+        <button class="action-chip slash-chip" data-action="/help" type="button" aria-label="Antigravity Help">
+            <span class="slash-prefix">/</span><span>help</span>
+        </button>
+        <button class="action-chip" data-open-swarm="1" data-testid="quick-open-swarm-chip" type="button" aria-label="Open Swarm UI">
+            <span>🐝 Swarm UI</span>
+        </button>
+        <button class="action-chip" data-open-quota="1" type="button" aria-label="Weekly Quota">
+            <span>◕ Quota</span>
+        </button>
+        <button class="action-chip" data-open-ide="1" type="button" aria-label="Antigravity IDE">
+            <span>&lt;/&gt; IDE</span>
+        </button>
+        <button class="action-chip" data-action="Continue" type="button" aria-label="Continue">
+            <span>Continue</span>
+        </button>
+        <button class="action-chip" data-action="Explain code" type="button" aria-label="Explain Code">
+            <span>Explain</span>
+        </button>
+        <button class="action-chip" data-action="Fix bugs" type="button" aria-label="Fix Bugs">
+            <span>Fix Bugs</span>
+        </button>
+        <button class="action-chip" data-action="Refactor" type="button" aria-label="Refactor">
+            <span>Refactor</span>
+        </button>
+        <button class="action-chip" data-action="Add tests" type="button" aria-label="Add Tests">
+            <span>Add Tests</span>
+        </button>
+    </div>
+
+    <!-- Antigravity 2.33 Signature Surface Composer -->
+    <section class="composer-dock" data-testid="agent-input-box">
+        <!-- Thumb-friendly Mobile Selection Quote Banner (always reachable even under Android OS ActionMode) -->
+        <div class="composer-selection-banner" id="composerSelectionBanner" style="display: none;">
+            <div class="composer-selection-snippet">
+                <span class="quote-glyph">❝</span>
+                <span id="composerSelectionPreview">Selected response text…</span>
+            </div>
+            <div class="composer-selection-actions">
+                <button type="button" class="composer-selection-btw-btn" id="composerSelectionBtwBtn">/btw</button>
+                <button type="button" class="composer-selection-quote-btn" id="composerSelectionQuoteBtn">Quote &amp; Reply</button>
+            </div>
+        </div>
+
+        <!-- Slash Command Autocomplete Popup -->
+        <div class="slash-menu-popup" id="slashMenuPopup" role="listbox" aria-label="Slash Commands" style="display: none;"></div>
+
+        <div class="surface-composer" id="antigravitySidePanelInputBox">
+            <div class="surface-composer-card">
+                <!-- Quoted Responses & Specific Answers Bar -->
+                <div class="quote-preview-bar" id="quotePreviewBar" data-testid="quote-preview-bar" style="display: none;"></div>
+
+                <!-- Attached Context Pills -->
+                <div class="attachment-preview-bar" id="attachmentPreviewBar" style="display:none;"></div>
+
+                <!-- Prompt Textarea -->
+                <div class="composer-editor-row">
+                    <textarea id="messageInput" placeholder="Ask anything, quote, or type / for actions…" rows="1" aria-label="Agent prompt"></textarea>
+                </div>
+
+                <!-- Bottom Composer Toolbar (Antigravity 2.33 exact layout) -->
+                <div class="composer-bottom-toolbar" data-testid="input-box-bottom-toolbar">
+                    <div class="composer-toolbar-left">
+                        <input type="file" id="fileInput" multiple style="display:none;" />
+                        <button class="composer-tool-btn" id="attachBtn" type="button" aria-label="Attach File or Image" title="Attach Image or File">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                        </button>
+
+                        <!-- Slash Actions Trigger Button (Antigravity 2.33 `/` toolbar button) -->
+                        <button class="composer-tool-btn slash-trigger-btn" id="slashBtn" type="button" data-testid="slash-actions-trigger" aria-label="Browse All Slash Actions" title="All / Actions, Skills & Workflows">
+                            <span class="slash-btn-glyph">/</span>
+                        </button>
+
+                        <!-- Model Selector Trigger Pill -->
+                        <button class="composer-chip model-chip" id="modelBtn" type="button" data-testid="model-selector-trigger" aria-label="Select Model">
+                            <span class="model-spark-icon" aria-hidden="true">✦</span>
+                            <span id="modelText" class="chip-truncate">Gemini 4 Neon (High)</span>
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+                                <path d="M6 9l6 6 6-6" />
+                            </svg>
+                        </button>
+
+                        <!-- Agent Execution Mode Pill -->
+                        <button class="composer-chip mode-chip" id="modeBtn" type="button" data-testid="autonomous-mode-inline" aria-label="Select Agent Mode">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                            </svg>
+                            <span id="modeText">Agent</span>
+                        </button>
+                    </div>
+
+                    <div class="composer-toolbar-right">
+                        <button class="composer-tool-btn voice-btn" id="voiceBtn" type="button" aria-label="Voice Dictation" title="Voice Input">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                <line x1="12" y1="19" x2="12" y2="23"></line>
+                            </svg>
+                        </button>
+
+                        <button class="composer-send-btn" id="sendBtn" type="button" data-testid="send-button" aria-label="Send Prompt">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="19" x2="12" y2="5"></line>
+                                <polyline points="5 12 12 5 19 12"></polyline>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Model & Mode Selector Bottom Sheet (Antigravity 2.33 Grouped Panel) -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-panel" id="modalPanel" data-testid="model-selector-panel">
+            <div class="modal-drag-handle"></div>
+            <div class="modal-header-row">
+                <div class="modal-title" id="modalTitle">Select Model</div>
+                <button class="agy-icon-btn modal-close-x" id="closeModalBtn" type="button" aria-label="Close">✕</button>
+            </div>
+            <div id="modalList" class="modal-scroll-list"></div>
+        </div>
+    </div>
+
+    <!-- Support Modal -->
+    <div class="modal-overlay" id="supportOverlay">
+        <div class="modal-panel" style="text-align: center; padding: 24px 20px;">
+            <div class="modal-drag-handle"></div>
+            <div class="modal-title" style="margin-bottom: 8px;">Antigravity Remote v6.0</div>
+            <p style="color: var(--muted-foreground); margin-bottom: 20px; font-size: 13.5px; line-height: 1.55;">
+                Updated for <b>Antigravity 2.33 Agentic Hub</b>, Gemini 4 Neon / Argon / Hydrogen &amp; Orchestrator, Claude 5.5 &amp; Android Mobile.
+            </p>
+            <a href="https://krishnakanthb13.github.io/S/PLPm.html" target="_blank" rel="noopener noreferrer"
+                class="agy-primary-cta-link">Support Original Project</a>
+            <div style="margin-top: 12px;">
+                <button id="closeSupportBtn" type="button" class="agy-text-btn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quote & Answer Specific Parts Bottom Sheet -->
+    <div class="modal-overlay" id="quotePartsOverlay" data-testid="quote-parts-modal" style="z-index: 2450;">
+        <div class="modal-panel quote-parts-panel">
+            <div class="modal-drag-handle"></div>
+            <div class="modal-header-row">
+                <div>
+                    <div class="modal-title">Quote &amp; Answer Specific Parts</div>
+                    <div class="quote-parts-subtitle">Tap one or more blocks below to quote and write specific answers</div>
+                </div>
+                <button class="agy-icon-btn modal-close-x" id="closeQuotePartsBtn" type="button" aria-label="Close">✕</button>
+            </div>
+            <div id="quotePartsList" class="modal-scroll-list quote-parts-list"></div>
+            <div class="quote-parts-footer">
+                <button type="button" class="quote-parts-secondary-btn" id="quotePartsInsertBtn" data-testid="quote-parts-insert-btn">
+                    Add to Composer
+                </button>
+                <button type="button" class="quote-parts-primary-btn" id="quotePartsSendBtn" data-testid="quote-parts-send-btn">
+                    Send Specific Answers
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Full-Screen Code Viewer Modal -->
+    <div class="modal-overlay" id="codeViewerModal" style="z-index: 2500;">
+        <div class="modal-panel code-viewer-panel">
+            <div class="modal-drag-handle"></div>
+            <div class="code-viewer-header">
+                <span class="code-viewer-lang" id="codeViewerLang">CODE</span>
+                <div class="code-viewer-actions">
+                    <button class="code-viewer-btn code-viewer-quote-btn" id="codeViewerQuoteBtn" data-testid="code-viewer-quote-btn" type="button">❝ Quote</button>
+                    <button class="code-viewer-btn" id="codeViewerCopyBtn" type="button">Copy Code</button>
+                    <button class="code-viewer-btn close-code-btn" id="closeCodeViewerBtn" type="button" aria-label="Close">✕</button>
+                </div>
+            </div>
+            <pre class="code-viewer-body"><code id="codeViewerContent"></code></pre>
+        </div>
+    </div>
+
+    <!-- Full-Screen Media & Attachment Lightbox Modal -->
+    <div class="modal-overlay media-lightbox-overlay" id="mediaLightboxModal" data-testid="media-lightbox-modal" style="z-index: 2550;">
+        <div class="modal-panel media-lightbox-panel">
+            <div class="modal-drag-handle"></div>
+            <div class="code-viewer-header">
+                <span class="code-viewer-lang" id="mediaLightboxTitle">ATTACHMENT</span>
+                <div class="code-viewer-actions">
+                    <a href="#" id="mediaLightboxDownloadBtn" class="code-viewer-btn media-download-link" target="_blank" rel="noopener noreferrer" download style="display: none;">Open / Save</a>
+                    <button class="code-viewer-btn close-code-btn" id="closeMediaLightboxBtn" type="button" aria-label="Close">✕</button>
+                </div>
+            </div>
+            <div class="media-lightbox-stage" id="mediaLightboxStage"></div>
+        </div>
+    </div>
+
+    <!-- Antigravity 2.33 Hub Slide-Out Sidebar Drawer -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+    <aside class="history-layer" id="historyLayer" data-testid="conversation-list-sidebar">
+        <div class="history-header">
+            <div class="sidebar-brand">
+                <div class="brand-glyph small">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.3">
+                        <path d="M12 2L3 7l9 5 9-5-9-5z"></path>
+                        <path d="M3 12l9 5 9-5"></path>
+                        <path d="M3 17l9 5 9-5"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h2>Antigravity Hub</h2>
+                    <span class="sidebar-version-meta" id="sidebarHubMeta">Hub v2.33</span>
+                </div>
+            </div>
+            <button class="agy-icon-btn" id="closeSidebarBtn" type="button" aria-label="Close Sidebar">✕</button>
+        </div>
+
+        <div class="sidebar-quota-card" id="sidebarQuotaCard" data-testid="sidebar-quota-card">
+            <div class="sidebar-quota-top">
+                <span class="sidebar-quota-title" id="sidebarPlanBadge">Antigravity Plan</span>
+                <button type="button" class="sidebar-quota-open-btn" id="sidebarOpenQuotaBtn">Quota Details →</button>
+            </div>
+            <div class="sidebar-quota-bars" id="sidebarQuotaBars">
+                <div class="sidebar-quota-row">
+                    <span>Weekly Limit</span>
+                    <span id="sidebarWeeklyPct">--%</span>
+                </div>
+                <div class="quota-progress-track">
+                    <div class="quota-progress-fill" id="sidebarWeeklyBar" style="width: 100%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="history-search-container">
+            <div class="history-search-wrapper">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" id="historySearchInput" placeholder="Search for conversations..." aria-label="Search for conversations" />
+            </div>
+        </div>
+
+        <div class="history-content" id="historyList"></div>
+
+        <div class="sidebar-footer">
+            <button class="sidebar-footer-btn" id="sidebarSwitchSwarmBtn" data-testid="sidebar-open-swarm-btn" type="button">
+                <span>🐝</span>
+                <span id="sidebarSwitchSwarmLabel">Open Swarm UI Board</span>
+            </button>
+            <button class="sidebar-footer-btn" id="sidebarSwitchIdeBtn" type="button">
+                <span class="seg-code-glyph">&lt;/&gt;</span>
+                <span id="sidebarSwitchIdeLabel">Open Antigravity IDE View</span>
+            </button>
+            <button class="sidebar-footer-btn" id="exportChatBtn" data-testid="export-chat-btn" type="button">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+                <span>Export Chat (.md)</span>
+            </button>
+            <a href="/download/apk" class="sidebar-footer-btn apk-download-btn" id="apkDownloadBtn" style="display: none;">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                <span id="apkDownloadLabel">Download Android APK</span>
+            </a>
+            <button class="sidebar-footer-btn" id="switchServerBtn" type="button" style="display: none;">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="2" width="20" height="8" rx="2"></rect>
+                    <rect x="2" y="14" width="20" height="8" rx="2"></rect>
+                    <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                    <line x1="6" y1="18" x2="6.01" y2="18"></line>
+                </svg>
+                <span>Switch PC Server</span>
+            </button>
+            <button class="sidebar-footer-btn subtle" id="supportBtn" type="button">
+                <span>About Antigravity Remote v6.0</span>
+            </button>
+        </div>
+    </aside>
+
+    <script src="js/app.js?v=6.6.3"></script>
+</body>
+
+</html>
