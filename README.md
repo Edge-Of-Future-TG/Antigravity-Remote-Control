@@ -12,7 +12,8 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Version: 6.0.0](https://img.shields.io/badge/Version-6.0.0-38bdf8.svg)](./RELEASE_NOTES.md)
 [![Antigravity Hub: 2.33+](https://img.shields.io/badge/Antigravity_Hub-2.33+-7aae66.svg)](./hub_bridge.js)
-[![Platform: Windows 10/11 + Android](https://img.shields.io/badge/Platform-Windows_10%2F11_%2B_Android-007acc.svg)](#platform-support)
+[![Platform: Windows 10/11 · Linux · Android](https://img.shields.io/badge/Platform-Windows_10%2F11_·_Linux_·_Android-007acc.svg)](#platform-support)
+[![Linux CI](https://github.com/Edge-Of-Future-TG/Antigravity-Remote-Control/actions/workflows/linux-ci.yml/badge.svg)](https://github.com/Edge-Of-Future-TG/Antigravity-Remote-Control/actions/workflows/linux-ci.yml)
 
 **Antigravity Remote Control (Phone Connect v6.0)** is a real-time mobile command center and native Android client for **Antigravity 2.33 Agentic Hub**. Step away from your desk while retaining full control over multi-agent `/swarm` and `/boost` pipelines, live code diffs, terminal approvals, interactive agent questions, and the full Antigravity 2.33 AI model catalog.
 
@@ -37,34 +38,38 @@
 
 | Component | Status | Notes |
 | :--- | :--- | :--- |
-| **Host PC — Windows 10 / 11** | ✅ **Verified & Supported** | Tested end-to-end with Antigravity 2.33+ Hub ConnectRPC, Local Wi-Fi QR, Web Tunnels (`cloudflare` / `pinggy`), and `npm test`. |
+| **Host PC — Windows 10 / 11** | ✅ **Verified & Supported** | Tested end-to-end with live Antigravity 2.33+ Hub ConnectRPC, Local Wi-Fi QR, Web Tunnels (`cloudflare` / `pinggy`), and `npm test`. |
+| **Host PC — Linux (Ubuntu / Debian)** | ✅ **Linux CI Verified** | `.sh` launchers (`bash -n`), `server.js` HTTP/HTTPS/WS, `generate_ssl.js`, Hub ConnectRPC bridge, `launcher.py` LAN/IP logic, and `./gradlew testDebugUnitTest` verified on `ubuntu-latest` via [`npm run test:linux`](./tests/verify_linux.mjs) & [GitHub Actions](./.github/workflows/linux-ci.yml). *(Live GUI Antigravity Desktop on a physical Linux desktop has not been run locally yet.)* |
 | **Mobile Client — Android** | ✅ **Verified & Supported** | Tested on physical Android hardware (`Antigravity-Remote-Control-v6.0.apk` + mobile Chrome). |
-| **Mobile Client — iOS** | ⚠️ **Web UI Only (Untested on iOS)** | Standard mobile web UI via Safari; not tested on a physical iPhone/iPad. |
-| **Host PC — Linux / macOS** | 🧪 **Experimental / Untested** | Legacy Unix `.sh` scripts and non-Windows code paths are included for community contributors, **but have NOT been run or verified on Linux or macOS** (contributions/PRs welcome). |
+| **Host PC — macOS & Mobile iOS** | 🧪 **Experimental / Untested** | Standard web UI & macOS code paths exist for contributors, but have not been tested on physical Apple hardware. |
 
 ---
 
-## 🚀 Quick Start (Zero-Flag Hub Mode — Windows)
+## 🚀 Quick Start (Zero-Flag Hub Mode — Windows & Linux)
 
-In **v6.0**, you no longer need to launch Antigravity with `--remote-debugging-port=9000`. As long as Antigravity 2.33+ is open on your Windows PC, `hub_bridge.js` discovers the live Hub daemon automatically.
+In **v6.0**, you no longer need to launch Antigravity with `--remote-debugging-port=9000`. As long as Antigravity 2.33+ is open on your PC, `hub_bridge.js` discovers the live Hub daemon automatically.
 
-### Step 1: Open Antigravity 2.33+ on Your Windows PC
+### Step 1: Open Antigravity 2.33+ on Your PC
 Simply launch **Antigravity** normally. *(Optional: Legacy CDP mode via `antigravity . --remote-debugging-port=9000` is still supported as an automatic fallback if the Hub daemon is unavailable.)*
 
 ### Step 2: Start the Remote Control Server
 
-**Windows (Local Wi-Fi — Verified):**
+**Windows (Local Wi-Fi):**
 ```bat
 start_ag_phone_connect.bat
 ```
 *(Or use `shortcuts\Phone Connect (Home).bat` for LAN mode, or `shortcuts\Phone Connect (Outside).bat` for Web Tunnel mode.)*
 
-**Direct Node.js Start (Windows — Verified):**
-```bat
-npm start
+**Linux (Ubuntu / Debian — Local Wi-Fi):**
+```bash
+chmod +x start_ag_phone_connect.sh   # First time only
+./start_ag_phone_connect.sh
 ```
 
-> **Note for Linux / macOS users:** `start_ag_phone_connect.sh` and `start_ag_phone_connect_web.sh` exist in the repository as experimental starting points, **but have not been tested on Linux or macOS** (see [Platform Support](#platform-support)).
+**Direct Node.js Start (Windows / Linux):**
+```bash
+npm start
+```
 
 The launcher automatically:
 - Verifies Node.js & Python virtual environment (`venv`) dependencies
@@ -75,7 +80,7 @@ The launcher automatically:
 ### Step 3: Connect from Android APK or Mobile Browser
 
 #### Option A: Native Android App (`Antigravity-Remote-Control-v6.0.apk`) — Recommended
-1. Download `Antigravity-Remote-Control-v6.0.apk` from **GitHub Releases** (or build it on Windows via `cd android && .\gradlew.bat testDebugUnitTest assembleRelease`) and install it on your Android phone. *(Tip: If you drop the `.apk` into the project root directory, the server automatically serves it in the mobile web sidebar at `/download/apk`.)*
+1. Download `Antigravity-Remote-Control-v6.0.apk` from **GitHub Releases** (or build from source on Windows `.\gradlew.bat` or Linux `./gradlew` via `cd android && ./gradlew testDebugUnitTest assembleRelease`) and install it on your Android phone. *(Tip: If you drop the `.apk` into the project root directory, the server automatically serves it in the mobile web sidebar at `/download/apk`.)*
 2. Open **Antigravity Remote**:
    - **Same Wi-Fi**: Tap your auto-discovered PC card under **Wi-Fi Auto-Discovery** (`● Live · Hub v2.33.0`).
    - **Anywhere (Tunnel)**: Paste your Cloudflare / Pinggy / Serveo / ngrok URL (or Magic Link with `?key=...`) and tap **Connect to Antigravity Hub**.
@@ -94,14 +99,14 @@ Control your Antigravity Hub from **anywhere on mobile data** with Zero-Trust au
 ### Tunnel Providers (`.env`) & Automatic Fallback
 `launcher.py --mode web` supports multiple providers and automatically falls back through `provider → pinggy → serveo → localtunnel` if the primary tunnel fails or stalls:
 
-1. **Cloudflare Tunnel (`TUNNEL_PROVIDER=cloudflare`, default)**: Uses `cloudflared` (on Windows install via `winget install Cloudflare.cloudflared` or place `cloudflared.exe` in the project folder; *macOS/Linux binary paths are experimental/untested*) for zero-account `*.trycloudflare.com` HTTPS tunnels, complete with DoH edge lookup, LAN interface binding around VPNs, and live payload verification.
+1. **Cloudflare Tunnel (`TUNNEL_PROVIDER=cloudflare`, default)**: Uses `cloudflared` (install on Windows via `winget install Cloudflare.cloudflared`, on Linux via package repo/binary in `PATH` or `./cloudflared`, on macOS via `brew install cloudflared`) for zero-account `*.trycloudflare.com` HTTPS tunnels, complete with DoH edge lookup, LAN interface binding around VPNs, and live payload verification.
 2. **Pinggy (`TUNNEL_PROVIDER=pinggy`)**: Zero-install SSH-over-port-443 tunnel (`pip install pinggy`, `PINGGY_TOKEN` optional). Ideal if your ISP or VPN blocks/throttles Cloudflare's port `7844`.
 3. **Serveo (`TUNNEL_PROVIDER=serveo`)**: Zero-install SSH-over-port-443 tunnel using system `ssh`.
 4. **ngrok (`TUNNEL_PROVIDER=ngrok`)**: Uses `pyngrok` — set `NGROK_AUTHTOKEN=your_token` in `.env`.
 
 ### Launching Global Web Mode
-- **Windows (Verified):** Run `start_ag_phone_connect_web.bat` (or `shortcuts\Phone Connect (Outside).bat`)
-- **Linux / macOS *(Experimental / Untested)*:** `./start_ag_phone_connect_web.sh` is included in the repository but has **not** been tested on Linux or macOS.
+- **Windows:** Run `start_ag_phone_connect_web.bat` (or `shortcuts\Phone Connect (Outside).bat`)
+- **Linux (Ubuntu / Debian):** Run `chmod +x start_ag_phone_connect_web.sh && ./start_ag_phone_connect_web.sh`
 
 Scan the **Magic QR Code** printed in the terminal to authenticate automatically, or log in manually with your `APP_PASSWORD`.
 
@@ -146,18 +151,26 @@ Scan the **Magic QR Code** printed in the terminal to authenticate automatically
 
 ## 🧪 Verification & Building the Android APK
 
-### Run Automated Integration & Headless Chrome Suite
+### Run Automated Verification Suites
 ```bash
-node tests/verify_remote_control.mjs
-```
-Verifies Markdown rendering, Claude/Gemini model parsing, `userConfig` parity, `CODE_ACTION` diff hunks, `GENERIC` tool rendering, SDK system-reminder filtering, live Hub RPC (`/boost`), HTTP/HTTPS single-port multiplexing, binary upload integrity, tunnel auth guards, and headless Chrome UI checks.
+# Windows full live Hub + Headless Chrome suite (with Antigravity open & certs generated):
+npm test
 
-### Build & Verify Android APK (Windows — Verified)
-```bat
-cd android
-.\gradlew.bat testDebugUnitTest assembleRelease
+# Cross-platform / Linux headless CI suite (Mock Hub ConnectRPC + HTTP/HTTPS/WS + launcher.py):
+npm run test:linux
 ```
-*(Experimental / untested on Linux/macOS: `./gradlew testDebugUnitTest assembleRelease`.)*
+`npm test` verifies Markdown rendering, Claude/Gemini model parsing, `userConfig` parity, `CODE_ACTION` diff hunks, `GENERIC` tool rendering, SDK system-reminder filtering, live Hub RPC (`/boost`), HTTP/HTTPS single-port multiplexing, binary upload integrity, tunnel auth guards, and headless Chrome UI checks. `npm run test:linux` executes automatically on Ubuntu Linux via [`.github/workflows/linux-ci.yml`](.github/workflows/linux-ci.yml).
+
+### Build & Verify Android APK
+```bash
+cd android
+
+# Windows:
+.\gradlew.bat testDebugUnitTest assembleRelease
+
+# Linux:
+./gradlew testDebugUnitTest assembleRelease
+```
 
 Produces a v2-signed release APK at `android/app/build/outputs/apk/release/app-release.apk` (published to `Antigravity-Remote-Control-v6.0.apk`).
 

@@ -3,10 +3,12 @@
 > 🇮🇷 **نسخه فارسی این آموزش:** [راهنمای کامل نصب و راه‌اندازی از صفر تا صد (فارسی)](./SETUP_GUIDE_FA.md)
 
 > [!IMPORTANT]
-> **Platform Support Notice:** This project has been **tested and verified on Windows 10/11 (Host PC) + Android (Native APK & mobile browser)**.
-> Unix `.sh` launch scripts (`start_ag_phone_connect.sh`, `start_ag_phone_connect_web.sh`, `install_context_menu.sh`) and Linux/macOS host paths are **experimental / untested** — they are included for community contributors, **but have NOT been run or verified on Linux or macOS** (nor tested on physical iOS devices).
+> **Platform Support Status:**
+> - **Windows 10/11 (Host PC) + Android (APK & Browser):** End-to-end verified on real hardware with live Antigravity 2.33+ Hub.
+> - **Linux (Ubuntu / Debian Host PC):** Server HTTP/HTTPS/WS, SSL generation, Hub ConnectRPC bridge, `.sh` launchers (`bash -n`), `launcher.py` IP/tunnel logic, and Android Gradle unit tests are automatically verified on `ubuntu-latest` via `npm run test:linux` and GitHub Actions CI. *(Live GUI Antigravity Desktop on a physical Linux desktop has not been run locally yet.)*
+> - **macOS & iOS:** Experimental / untested on physical Apple hardware.
 
-This guide walks you step by step from a Windows PC and Android phone all the way to running locally over Wi-Fi, accessing your session anywhere on mobile data via encrypted tunnels, building or installing the native Android APK, running automated tests, and publishing your own clean repository on GitHub.
+This guide walks you step by step from a Windows or Linux PC and Android phone all the way to running locally over Wi-Fi, accessing your session anywhere on mobile data via encrypted tunnels, building or installing the native Android APK, running automated tests, and publishing your own clean repository on GitHub.
 
 ---
 
@@ -49,47 +51,58 @@ Install these tools on the PC running Antigravity before starting the server:
 - Install and launch **Antigravity** on your PC so the Agentic Hub daemon is running.
 
 ### 2. Node.js 18+ LTS (includes `npm`)
-Required to run `server.js` and `tests/verify_remote_control.mjs`.
-- **Windows (Verified — PowerShell / winget):**
+Required to run `server.js` and the test suites.
+- **Windows (PowerShell / winget):**
   ```powershell
   winget install OpenJS.NodeJS.LTS
   ```
   *(Or download the LTS installer from [nodejs.org](https://nodejs.org/).)*
-- **Linux / macOS *(Experimental / Untested)*:** Install Node.js 18+ via your system package manager (`brew install node@20` or NodeSource `apt`). Not verified on Linux/macOS.
+- **Ubuntu / Debian Linux:**
+  ```bash
+  curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+  sudo apt-get install -y nodejs
+  ```
+- **macOS *(Experimental / Untested)*:** `brew install node@20`
 - **Verify:**
-  ```bat
+  ```bash
   node --version
   npm --version
   ```
 
 ### 3. Python 3.9+ (with `venv` & `pip`)
 Required by `launcher.py` for automated tunnel startup, QR code generation, health/payload verification, and dependency setup.
-- **Windows (Verified):**
+- **Windows:**
   ```powershell
   winget install Python.Python.3.12
   ```
   *(If downloading from [python.org](https://www.python.org/downloads/), make sure **"Add python.exe to PATH"** is checked during installation.)*
-- **Linux / macOS *(Experimental / Untested)*:** Ensure `python3`, `python3-venv`, and `python3-pip` are installed (not verified on Linux/macOS).
+- **Ubuntu / Debian Linux:**
+  ```bash
+  sudo apt-get update && sudo apt-get install -y python3 python3-venv python3-pip
+  ```
+- **macOS *(Experimental / Untested)*:** `brew install python`
 - **Verify:**
-  ```bat
-  python --version
+  ```bash
+  python --version   # Windows (use python3 --version on Linux/macOS)
   ```
 
 ### 4. Git
-- **Windows (Verified):** `winget install Git.Git`
-- **Linux / macOS *(Experimental / Untested)*:** `git` via Homebrew / `apt`.
+- **Windows:** `winget install Git.Git`
+- **Ubuntu / Debian Linux:** `sudo apt-get install -y git`
+- **macOS *(Experimental / Untested)*:** `xcode-select --install` (or `brew install git`)
 
 ### 5. Optional Tunnel Tools (For Global Internet Access)
 `launcher.py` automatically creates a `venv/` and installs `requirements.txt` (`pyngrok`, `python-dotenv`, `qrcode`, `pinggy`), which already gives you **Pinggy** out of the box. Install these extras if you want Cloudflare or Serveo:
 - **Cloudflare (`cloudflared`):**
-  - **Windows (Verified):** `winget install Cloudflare.cloudflared` (or place `cloudflared.exe` in the project root folder — it is gitignored)
-  - **Linux / macOS *(Experimental / Untested)*:** `cloudflared` in `PATH` (not tested on Linux/macOS).
-- **Serveo (`ssh`):** Uses built-in **OpenSSH Client** (preinstalled on Windows 10/11).
+  - **Windows:** `winget install Cloudflare.cloudflared` (or place `cloudflared.exe` in the project root folder — it is gitignored)
+  - **Ubuntu / Debian Linux:** Install `cloudflared` from Cloudflare Downloads / package repo so `cloudflared` is in `PATH` (or place an executable `cloudflared` binary in the project root).
+  - **macOS *(Experimental / Untested)*:** `brew install cloudflared`
+- **Serveo (`ssh`):** Uses built-in **OpenSSH Client** (preinstalled on Windows 10/11, Linux, and macOS).
 - **ngrok:** Uses `pyngrok` automatically; simply get a free authtoken from [dashboard.ngrok.com](https://dashboard.ngrok.com).
 
 ### 6. Optional: Android Build Toolchain *(Only needed if building the APK yourself)*
 If you just want to use the app, download the prebuilt `Antigravity-Remote-Control-v6.0.apk` from **GitHub Releases** and skip this part. To compile from source (`android/`):
-- **JDK 17** (`winget install EclipseAdoptium.Temurin.17.JDK` on Windows; *macOS/Linux untested*)
+- **JDK 17** (`winget install EclipseAdoptium.Temurin.17.JDK` on Windows; `sudo apt-get install -y openjdk-17-jdk` on Ubuntu/Debian; *macOS untested*)
 - **Android Studio** or **Android SDK Command-Line Tools** with Android SDK Platform 36 (`compileSdk = 36`), Build-Tools, and Platform-Tools (`adb`).
 
 ---
@@ -108,22 +121,27 @@ npm install
 ```
 *(Or use `npm ci` for an exact lockfile install.)*
 
-For Python (`launcher.py` also creates `venv` automatically when launched via the Windows scripts, or you can set it up manually):
-```powershell
-# Windows PowerShell (Verified)
+For Python (`launcher.py` and the `.bat`/`.sh` launchers also create `venv` automatically, or you can set it up manually):
+```bash
+# Windows PowerShell
 python -m venv venv
 .\venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+
+# Linux (Ubuntu / Debian)
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
 ```
-*(Experimental / untested on Linux/macOS: `python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt`.)*
 
 ### 3. Create & Configure `.env`
 Copy `.env.example` to `.env`:
-```bat
-:: Windows CMD
+```bash
+# Windows CMD
 copy .env.example .env
 
-:: PowerShell (or cp .env.example .env on Unix)
+# Windows PowerShell / Linux
+cp .env.example .env
 ```
 
 Edit `.env` in any text editor and customize your settings:
@@ -167,11 +185,19 @@ On **Windows**, allow Node.js / TCP port `3000` on Private networks so your phon
   ```powershell
   New-NetFirewallRule -DisplayName "Antigravity Remote Control (Port 3000)" -Direction Inbound -Protocol TCP -LocalPort 3000 -Profile Private -Action Allow
   ```
-- **Linux *(Experimental / Untested)*:** `sudo ufw allow 3000/tcp`
+- **Linux (`ufw`):** `sudo ufw allow 3000/tcp`
 
 ### Step 3: Start the Server in Local Mode
-- **Windows (Verified):** Double-click `start_ag_phone_connect.bat` (or `shortcuts\Phone Connect (Home).bat`), or run `npm start` directly in PowerShell/CMD.
-- **Linux / macOS *(Experimental / Untested — not verified)*:** `start_ag_phone_connect.sh` exists in the repo for contributors, but has not been tested on Linux/macOS.
+- **Windows:** Double-click `start_ag_phone_connect.bat` (or `shortcuts\Phone Connect (Home).bat`).
+- **Linux (Ubuntu / Debian):**
+  ```bash
+  chmod +x start_ag_phone_connect.sh   # first time only
+  ./start_ag_phone_connect.sh
+  ```
+- **Direct Node.js (Windows / Linux):**
+  ```bash
+  npm start
+  ```
 
 ### Step 4: Connect from Your Phone
 - **Android APK (Recommended):**
@@ -199,8 +225,12 @@ Web Mode exposes your session securely over HTTPS (`wss://`) so you can control 
   - `serveo` tunnels over SSH port `443`; `ngrok` uses your `NGROK_AUTHTOKEN`.
 
 ### 2. Launch Web Mode
-- **Windows (Verified):** Double-click `start_ag_phone_connect_web.bat` (or `shortcuts\Phone Connect (Outside).bat`).
-- **Linux / macOS *(Experimental / Untested — not verified)*:** `start_ag_phone_connect_web.sh` exists in the repository, but has not been verified on Linux/macOS.
+- **Windows:** Double-click `start_ag_phone_connect_web.bat` (or `shortcuts\Phone Connect (Outside).bat`).
+- **Linux (Ubuntu / Debian):**
+  ```bash
+  chmod +x start_ag_phone_connect_web.sh   # first time only
+  ./start_ag_phone_connect_web.sh
+  ```
 
 ### 3. Authenticate Safely on Your Phone
 The terminal prints:
@@ -225,22 +255,27 @@ Connect by:
 1. Ensure **JDK 17** (`JAVA_HOME`) and the **Android SDK** (`ANDROID_HOME` or `android/local.properties`) are installed.
 2. Create `android/local.properties` *(gitignored)* pointing to your Android SDK:
    ```properties
-   # Windows example (Verified — escape backslashes and colon):
+   # Windows example (escape backslashes and colon):
    sdk.dir=C\:\\Users\\<YourName>\\AppData\\Local\\Android\\Sdk
 
-   # Experimental / Untested Linux/macOS examples:
-   # sdk.dir=/Users/<YourName>/Library/Android/sdk
+   # Linux example:
    # sdk.dir=/home/<YourName>/Android/Sdk
+
+   # macOS example (experimental / untested):
+   # sdk.dir=/Users/<YourName>/Library/Android/sdk
    ```
-3. *(Important)* If you edit any files in `public/` (`index.html`, `login.html`, `manifest.json`, `css/style.css`, `js/app.js`), copy them into `android/app/src/main/assets/www/` so both Web and APK stay identical (`npm test` checks byte-for-byte parity).
+3. *(Important)* If you edit any files in `public/` (`index.html`, `login.html`, `manifest.json`, `css/style.css`, `js/app.js`), copy them into `android/app/src/main/assets/www/` so both Web and APK stay identical (`npm test` and `npm run test:linux` check byte-for-byte parity).
 4. Run Gradle unit tests + build the APK:
-   ```bat
+   ```bash
    cd android
 
-   :: Windows (Verified)
+   # Windows
    .\gradlew.bat testDebugUnitTest assembleRelease
+
+   # Linux
+   chmod +x gradlew
+   ./gradlew testDebugUnitTest assembleRelease
    ```
-   *(Experimental / untested on Linux/macOS: `./gradlew testDebugUnitTest assembleRelease`.)*
 5. Output APK location:
    `android/app/build/outputs/apk/release/app-release.apk`
 6. Optional USB install with ADB:
@@ -264,15 +299,20 @@ Connect by:
 
 Before pushing changes or releasing a build, run the full verification suites:
 
-### 1. Syntax & Integration Test Suite (Node.js + Headless Chrome UI checks — Verified on Windows)
-```bat
+### 1. Syntax, Cross-Platform Linux CI & Full Live Suites
+```bash
+# Syntax checks (Windows / Linux)
 node --check server.js
 node --check hub_bridge.js
 node --check public/js/app.js
-python -m py_compile launcher.py
+python -m py_compile launcher.py   # or python3 on Linux
+
+# Linux / Cross-Platform headless integration suite (Mock Hub ConnectRPC + HTTP/HTTPS/WS + launcher.py + bash -n)
+npm run test:linux
+
+# Full live Windows Hub + Headless Chrome suite (requires Antigravity running & certs generated via node generate_ssl.js)
 npm test
 ```
-*(Note: Stage 3 of `npm test` tests simultaneous HTTPS on port 3000, so run `node generate_ssl.js` once before running `npm test` if `certs/` does not exist yet.)*
 
 `npm test` (`tests/verify_remote_control.mjs`) executes:
 1. Unit & regression checks (Markdown parser, nested lists, models, `CODE_ACTION` diffs, `GENERIC` tools, SDK prompt isolation, and **byte-for-byte `public/` <-> `android/app/src/main/assets/www/` asset parity**).
@@ -280,12 +320,14 @@ npm test
 3. Express HTTP/HTTPS multiplexer, binary uploads, and Zero-Trust `401` tunnel guard tests.
 4. Headless Chrome / Chromium mobile viewport (`360x800`) + Android offline preview UI verification (if Chrome/Edge is installed).
 
-### 2. Android Unit Tests (Verified on Windows)
-```bat
+`npm run test:linux` (`tests/verify_linux.mjs`) runs automatically on `ubuntu-latest` in GitHub Actions (`.github/workflows/linux-ci.yml`) and verifies Unix path handling, mock Hub ConnectRPC discovery & workflow loading, workspace `/etc/passwd` `403` isolation, simultaneous HTTP/HTTPS/WS + binary uploads, `launcher.py` private LAN detection (`127.0.1.1` rejection), and `.sh` Bash syntax.
+
+### 2. Android Unit Tests
+```bash
 cd android
-.\gradlew.bat testDebugUnitTest
+# Windows: .\gradlew.bat testDebugUnitTest
+# Linux:   ./gradlew testDebugUnitTest
 ```
-*(Experimental / untested on Linux/macOS: `./gradlew testDebugUnitTest`.)*
 
 ### 3. Live Health Endpoint Check
 While `server.js` is running locally:

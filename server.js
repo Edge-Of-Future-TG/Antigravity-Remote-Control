@@ -67,9 +67,26 @@ function killPortProcess(port) {
                 } catch (e) { /* Process may have already exited */ }
             }
         } else {
-            // Linux/macOS: Use lsof and kill
-            const result = execSync(`lsof -ti:${port}`, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] });
-            const pids = result.trim().split('\n').filter(p => p && p !== process.pid.toString());
+            // Linux/macOS: Use lsof first, then fuser / ss fallback on minimal distros
+            let rawPids = '';
+            try {
+                rawPids = execSync(`lsof -ti:${port}`, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] });
+            } catch {
+                try {
+                    rawPids = execSync(`fuser ${port}/tcp 2>/dev/null || true`, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] });
+                } catch {}
+                if (!rawPids.trim()) {
+                    try {
+                        const ssOut = execSync(`ss -tlnp "sport = :${port}" 2>/dev/null || true`, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] });
+                        const ssMatches = [...ssOut.matchAll(/pid=(\d+)/g)].map(m => m[1]);
+                        rawPids = ssMatches.join('\n');
+                    } catch {}
+                }
+            }
+            const pids = rawPids
+                .trim()
+                .split(/\s+/)
+                .filter(p => /^\d+$/.test(p) && p !== process.pid.toString());
             for (const pid of pids) {
                 try {
                     execSync(`kill -9 ${pid}`, { stdio: 'pipe' });
@@ -88,6 +105,9 @@ function killPortProcess(port) {
 // Get local IP address for mobile access
 // Prefers real network IPs (192.168.x.x, 10.x.x.x) over virtual adapters (172.x.x.x from WSL/Docker)
 function getLocalIP() {
+    if (process.env.HOST_IP && process.env.HOST_IP.trim()) {
+        return process.env.HOST_IP.trim();
+    }
     const interfaces = os.networkInterfaces();
     const candidates = [];
 

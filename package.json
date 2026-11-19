@@ -6,7 +6,8 @@
     "scripts": {
         "start": "node server.js",
         "dev": "node server.js",
-        "test": "node tests/verify_remote_control.mjs"
+        "test": "node tests/verify_remote_control.mjs",
+        "test:linux": "node tests/verify_linux.mjs"
     },
     "dependencies": {
         "compression": "^1.8.1",

@@ -25,6 +25,7 @@ import re
 import json
 import threading
 import urllib.request
+import signal
 
 # -----------------------------------------------------------------------------
 # Dependency Management
@@ -80,37 +81,6 @@ def check_node_environment():
 # -----------------------------------------------------------------------------
 # Helpers
 # -----------------------------------------------------------------------------
-def get_local_ip():
-    """Robustly determines the local LAN IP address, prioritizing 192.168.x.x Wi-Fi/LAN."""
-    if os.environ.get('HOST_IP'):
-        return os.environ.get('HOST_IP')
-
-    try:
-        hostname = socket.gethostname()
-        _, _, ips = socket.gethostbyname_ex(hostname)
-        for ip in ips:
-            if ip.startswith('192.168.'):
-                return ip
-        for ip in ips:
-            if ip.startswith('10.'):
-                return ip
-        if ips:
-            return ips[0]
-    except Exception:
-        pass
-
-    s = None
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(('8.8.8.8', 80))
-        IP = s.getsockname()[0]
-    except Exception:
-        IP = '127.0.0.1'
-    finally:
-        if s:
-            s.close()
-    return IP
-
 CLOUDFLARE_FALLBACK_EDGES = [
     "198.41.192.7:7844",
     "198.41.200.13:7844",
@@ -121,7 +91,7 @@ CLOUDFLARE_FALLBACK_EDGES = [
 ]
 
 def _is_private_lan_ipv4(ip):
-    """Return True only for RFC-1918 private LAN IPv4 addresses (excluding loopback & 198.18/15 fake-IP VPN ranges)."""
+    """Return True only for RFC-1918 private LAN IPv4 addresses (excluding loopback, 127.0.1.1 & 198.18/15 VPN ranges)."""
     if not ip or not isinstance(ip, str):
         return False
     parts = ip.strip().split('.')
@@ -141,6 +111,64 @@ def _is_private_lan_ipv4(ip):
         return True
     return False
 
+def _collect_system_private_lan_ips():
+    """Collect unique RFC-1918 private LAN IPv4 addresses across hostname lookup and Linux/Unix interface tools."""
+    raw_ips = []
+    try:
+        hostname = socket.gethostname()
+        _, _, ips = socket.gethostbyname_ex(hostname)
+        raw_ips.extend(ips or [])
+    except Exception:
+        pass
+
+    if sys.platform.startswith('linux'):
+        for cmd in (["ip", "-4", "-o", "addr", "show", "scope", "global"], ["hostname", "-I"]):
+            try:
+                out = subprocess.check_output(cmd, text=True, stderr=subprocess.DEVNULL, timeout=2)
+                raw_ips.extend(re.findall(r'\b(?:\d{1,3}\.){3}\d{1,3}\b', out))
+            except Exception:
+                pass
+
+    unique = []
+    seen = set()
+    for ip in raw_ips:
+        if _is_private_lan_ipv4(ip) and ip not in seen:
+            seen.add(ip)
+            unique.append(ip)
+    return unique
+
+def get_local_ip():
+    """Robustly determines the local LAN IP address, prioritizing 192.168.x.x Wi-Fi/LAN and filtering 127.0.1.1."""
+    if os.environ.get('HOST_IP'):
+        return os.environ.get('HOST_IP').strip()
+
+    s = None
+    udp_ip = None
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(('8.8.8.8', 80))
+        candidate = s.getsockname()[0]
+        if _is_private_lan_ipv4(candidate):
+            udp_ip = candidate
+    except Exception:
+        pass
+    finally:
+        if s:
+            s.close()
+
+    candidates = _collect_system_private_lan_ips()
+    if udp_ip and udp_ip not in candidates:
+        candidates.append(udp_ip)
+
+    # Prefer standard LAN subnets: 192.168.x.x -> 10.x.x.x -> 172.16-31.x.x
+    for prefix in ('192.168.', '10.'):
+        for ip in candidates:
+            if ip.startswith(prefix):
+                return ip
+    if candidates:
+        return candidates[0]
+    return '127.0.0.1'
+
 def get_candidate_lan_ips():
     """Collect unique private LAN IPv4 addresses on this host for edge binding when default/VPN routing blocks port 7844."""
     candidates = []
@@ -152,12 +180,8 @@ def get_candidate_lan_ips():
             candidates.append(ip)
 
     add_ip(get_local_ip())
-    try:
-        _, _, ips = socket.gethostbyname_ex(socket.gethostname())
-        for ip in ips:
-            add_ip(ip)
-    except Exception:
-        pass
+    for ip in _collect_system_private_lan_ips():
+        add_ip(ip)
     return candidates
 
 def _doh_query(endpoint, name, qtype, timeout=5):
@@ -319,7 +343,12 @@ def terminate_process(proc):
 
 def start_cloudflare_tunnel(port):
     """Start Cloudflare Tunnel with DoH edge discovery, automatic VPN/LAN interface bind, and edge stability check."""
-    cf_bin = os.path.abspath("cloudflared.exe") if os.path.exists("cloudflared.exe") else "cloudflared"
+    if sys.platform == "win32" and os.path.exists("cloudflared.exe"):
+        cf_bin = os.path.abspath("cloudflared.exe")
+    elif os.path.isfile("cloudflared") and os.access("cloudflared", os.X_OK):
+        cf_bin = os.path.abspath("cloudflared")
+    else:
+        cf_bin = "cloudflared"
     cf_name = os.environ.get('CLOUDFLARE_TUNNEL_NAME') or os.environ.get('CLOUDFLARE_TUNNEL_ID')
     cf_custom_url = os.environ.get('CLOUDFLARE_TUNNEL_URL')
     origin_url = f"http://127.0.0.1:{port}"
@@ -669,6 +698,14 @@ def print_qr(url):
 # Main Execution
 # -----------------------------------------------------------------------------
 def main():
+    def _handle_sigterm(_signum, _frame):
+        raise KeyboardInterrupt()
+
+    try:
+        signal.signal(signal.SIGTERM, _handle_sigterm)
+    except Exception:
+        pass
+
     parser = argparse.ArgumentParser(description="Antigravity Phone Connect Launcher")
     parser.add_argument('--mode', choices=['local', 'web'], default='web', help="Mode to run in: 'local' (WiFi) or 'web' (Internet)")
     parser.add_argument('--provider', choices=['ngrok', 'cloudflare', 'pinggy', 'serveo'], help="Tunnel provider (defaults to .env TUNNEL_PROVIDER or 'cloudflare')")

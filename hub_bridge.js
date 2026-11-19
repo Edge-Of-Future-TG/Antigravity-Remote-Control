@@ -1393,7 +1393,7 @@ export class AntigravityHubBridge {
                     }
                 }
             } else {
-                const { stdout } = await execFileAsync('ps', ['-ax', '-o', 'pid=,command='], { timeout: 2500 });
+                const { stdout } = await execFileAsync('ps', ['-eo', 'pid=,args='], { timeout: 2500 });
                 for (const line of stdout.split(/\r?\n/)) {
                     const m = /^\s*(\d+)\s+(.+)$/.exec(line);
                     if (!m) continue;
@@ -1932,12 +1932,32 @@ export class AntigravityHubBridge {
         const home = os.homedir();
         const localAppData = process.env.LOCALAPPDATA || join(home, 'AppData', 'Local');
 
+        const pathDirs = String(process.env.PATH || '')
+            .split(process.platform === 'win32' ? ';' : ':')
+            .filter(Boolean);
+        const findInPath = names => {
+            for (const dir of pathDirs) {
+                for (const name of names) {
+                    const candidate = join(dir, name);
+                    if (fs.existsSync(candidate)) return candidate;
+                }
+            }
+            return null;
+        };
+
         const normalCandidates =
             process.platform === 'win32'
                 ? [join(localAppData, 'Programs', 'antigravity', 'Antigravity.exe')]
                 : process.platform === 'darwin'
                   ? ['/Applications/Antigravity.app']
-                  : [join(home, '.local', 'share', 'antigravity', 'antigravity'), '/usr/bin/antigravity'];
+                  : [
+                        join(home, '.local', 'bin', 'antigravity'),
+                        join(home, '.local', 'share', 'antigravity', 'antigravity'),
+                        '/usr/bin/antigravity',
+                        '/usr/local/bin/antigravity',
+                        '/opt/antigravity/antigravity',
+                        '/usr/share/antigravity/antigravity'
+                    ];
 
         const ideCandidates =
             process.platform === 'win32'
@@ -1948,13 +1968,21 @@ export class AntigravityHubBridge {
                 : process.platform === 'darwin'
                   ? ['/Applications/Antigravity IDE.app']
                   : [
+                        join(home, '.local', 'bin', 'antigravity-ide'),
                         join(home, '.local', 'share', 'antigravity-ide', 'antigravity-ide'),
                         join(home, 'antigravity-ide', 'antigravity-ide'),
-                        '/usr/bin/antigravity-ide'
+                        '/usr/bin/antigravity-ide',
+                        '/usr/local/bin/antigravity-ide',
+                        '/opt/antigravity-ide/antigravity-ide',
+                        '/usr/share/antigravity-ide/antigravity-ide'
                     ];
 
-        const normalExe = normalCandidates.find(p => fs.existsSync(p)) || null;
-        const ideExe = ideCandidates.find(p => fs.existsSync(p)) || null;
+        const normalExe =
+            normalCandidates.find(p => fs.existsSync(p)) ||
+            (process.platform !== 'win32' ? findInPath(['antigravity']) : null);
+        const ideExe =
+            ideCandidates.find(p => fs.existsSync(p)) ||
+            (process.platform !== 'win32' ? findInPath(['antigravity-ide']) : null);
 
         let ideCli = null;
         let ideVersion = null;
@@ -2264,7 +2292,11 @@ export class AntigravityHubBridge {
                 (normMaybeAbs === normRoot || normMaybeAbs.startsWith(normRootPrefix))
             ) {
                 candidate = maybeAbs;
-            } else if (/^file:\/\//i.test(rawInput) || /^[a-zA-Z]:[\\/]/.test(cleanedInput)) {
+            } else if (
+                /^file:\/\//i.test(rawInput) ||
+                /^[a-zA-Z]:[\\/]/.test(cleanedInput) ||
+                (process.platform !== 'win32' && cleanedInput.startsWith('/'))
+            ) {
                 const err = new Error('Path outside active workspace is forbidden');
                 err.statusCode = 403;
                 throw err;
@@ -2796,11 +2828,8 @@ export class AntigravityHubBridge {
 
         for (const rawUri of workspaceUris) {
             if (!rawUri || typeof rawUri !== 'string') continue;
-            let fsPath = rawUri.replace(/^file:\/\/\/?/i, '');
-            try { fsPath = decodeURIComponent(fsPath); } catch {}
-            if (process.platform === 'win32' && /^[a-zA-Z]:/.test(fsPath)) {
-                fsPath = fsPath.replace(/\//g, '\\');
-            }
+            const fsPath = uriToLocalPath(rawUri);
+            if (!fsPath) continue;
             candidateDirs.push(join(fsPath, '.agent', 'workflows'));
             candidateDirs.push(join(fsPath, '.agents', 'workflows'));
         }

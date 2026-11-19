@@ -1,0 +1,66 @@
+name: Linux CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  linux-server-and-launcher:
+    name: Ubuntu Linux (Server, Hub RPC & Launcher)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Node & Python dependencies
+        run: |
+          npm ci
+          python3 -m pip install -r requirements.txt
+
+      - name: Check Bash scripts & JS/Python syntax
+        run: |
+          bash -n start_ag_phone_connect.sh start_ag_phone_connect_web.sh install_context_menu.sh
+          node --check server.js
+          node --check hub_bridge.js
+          node --check generate_ssl.js
+          node --check ui_inspector.js
+          node --check public/js/app.js
+          node --check tests/verify_linux.mjs
+          python3 -m py_compile launcher.py
+
+      - name: Run Linux end-to-end suite
+        run: npm run test:linux
+
+  linux-android-unit-tests:
+    name: Ubuntu Linux (Android Unit Tests)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Run Android Gradle unit tests
+        run: |
+          chmod +x android/gradlew
+          cd android
+          ./gradlew testDebugUnitTest --no-daemon
